@@ -1,0 +1,113 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormGroup, FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+
+import { TrackService } from '@app/core/services';
+import { Track, MusicCategory } from '@app/core/models/track.model';
+
+@Component({
+  selector: 'app-library',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule
+  ],
+  templateUrl: './library.component.html',
+  styleUrls: ['./library.component.css']
+})
+export class LibraryComponent implements OnInit {
+
+  // 🔍 Recherche & filtre
+  searchTerm = '';
+  selectedCategory: MusicCategory | 'all' = 'all';
+
+  // ➕ Formulaire ajout track
+  trackForm: FormGroup;
+  fileError: string | null = null;
+
+  constructor(
+    public trackService: TrackService,
+    private fb: FormBuilder
+  ) {
+    this.trackForm = this.fb.group({
+      title: ['', [Validators.required, Validators.maxLength(50)]],
+      artist: ['', Validators.required],
+      description: ['', Validators.maxLength(200)],
+      category: ['pop', Validators.required],
+      audioFile: [null, Validators.required]
+    });
+  }
+
+  ngOnInit(): void {
+    this.trackService.loadTracks();
+  }
+
+  // 🎧 Sélection fichier audio
+  onFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    // 🔒 Taille max 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      this.fileError = 'Le fichier dépasse 10MB';
+      return;
+    }
+
+    // 🔒 Formats autorisés
+    const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
+    if (!allowedTypes.includes(file.type)) {
+      this.fileError = 'Format non supporté (MP3, WAV, OGG)';
+      return;
+    }
+
+    this.fileError = null;
+    this.trackForm.patchValue({ audioFile: file });
+  }
+
+  // ➕ Ajouter un track
+  async submit(): Promise<void> {
+    if (this.trackForm.invalid || this.fileError) return;
+
+    const file = this.trackForm.value.audioFile as File;
+
+    const audio = new Audio(URL.createObjectURL(file));
+    audio.onloadedmetadata = async () => {
+
+      const trackData = {
+        title: this.trackForm.value.title!,
+        artist: this.trackForm.value.artist!,
+        description: this.trackForm.value.description || '',
+        category: this.trackForm.value.category as MusicCategory,
+        duration: Math.floor(audio.duration),
+        createdAt: new Date(),
+        audioUrl: ''
+      };
+
+      await this.trackService.addTrack(trackData, file);
+      this.trackForm.reset({ category: 'pop' });
+    };
+  }
+
+  // 🔍 Recherche + filtre
+  filterTracks(tracks: Track[]): Track[] {
+    return tracks.filter(track => {
+      const matchesSearch =
+        track.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        track.artist.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+      const matchesCategory =
+        this.selectedCategory === 'all' ||
+        track.category === this.selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+  }
+
+  // 🗑 Supprimer
+  deleteTrack(id: string): void {
+    this.trackService.deleteTrack(id);
+  }
+}
