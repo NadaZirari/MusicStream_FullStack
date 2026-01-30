@@ -1,13 +1,14 @@
 package musicstream.backend.service;
 
-
 import musicstream.backend.model.Track;
 import musicstream.backend.repository.TrackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TrackService {
@@ -15,24 +16,32 @@ public class TrackService {
     @Autowired
     private TrackRepository trackRepository;
 
-    public List<Track> getAll() {
+    public Track saveTrack(MultipartFile file, String title, String artist,
+                           String category, String description, String duration) throws IOException {
+
+        Track track = Track.builder()
+                .title(title)
+                .artist(artist)
+                .category(category)
+                .description(description)
+                .duration(duration)
+                .addedDate(LocalDateTime.now())
+                .audioData(file.getBytes())
+                .fileName(file.getOriginalFilename())
+                .contentType(file.getContentType())
+                .build();
+
+        return trackRepository.save(track);
+    }
+
+    public List<Track> getAllTracks() {
         return trackRepository.findAll();
     }
 
-    public Optional<Track> getById(Long id) {
-        return trackRepository.findById(id);
-    }
-
-    public Track create(Track track) {
-        return trackRepository.save(track);
-    }
-
-    public Track update(Long id, Track track) {
-        track.setId(id);
-        return trackRepository.save(track);
-    }
-
-    public void delete(Long id) {
+    public void deleteTrack(String id) {
         trackRepository.deleteById(id);
     }
+/*
+    public Track updateTrack(String id, String title, String artist, String category, String description) {
+    }*/
 }

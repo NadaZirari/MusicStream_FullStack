@@ -1,47 +1,58 @@
 package musicstream.backend.controller;
 
 
-
 import musicstream.backend.model.Track;
 import musicstream.backend.service.TrackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/tracks")
-@CrossOrigin(origins = "http://localhost:4200") // Étape 13 déjà incluse
+@CrossOrigin(origins = "http://localhost:4200")
 public class TrackController {
 
     @Autowired
     private TrackService trackService;
 
     @GetMapping
-    public List<Track> getAllTracks() {
-        return trackService.getAll();
+    public List<Track> getAll() {
+        return trackService.getAllTracks();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Track> getTrackById(@PathVariable Long id) {
-        return trackService.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
 
-    @PostMapping
-    public Track createTrack(@RequestBody Track track) {
-        return trackService.create(track);
-    }
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<Track> uploadTrack(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title,
+            @RequestParam("artist") String artist,
+            @RequestParam("category") String category,
+            @RequestParam("description") String description,
+            @RequestParam("duration") String duration) throws IOException {
 
-    @PutMapping("/{id}")
-    public Track updateTrack(@PathVariable Long id, @RequestBody Track track) {
-        return trackService.update(id, track);
+        Track savedTrack = trackService.saveTrack(file, title, artist, category, description, duration);
+        return ResponseEntity.ok(savedTrack);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteTrack(@PathVariable Long id) {
-        trackService.delete(id);
+    public ResponseEntity<Void> deleteTrack(@PathVariable String id) {
+        trackService.deleteTrack(id);
+        return ResponseEntity.noContent().build();
     }
+/*
+    @PutMapping("/{id}")
+    public ResponseEntity<Track> updateTrack(
+            @PathVariable String id,
+            @RequestParam("title") String title,
+            @RequestParam("artist") String artist,
+            @RequestParam("category") String category,
+            @RequestParam("description") String description) {
+
+        Track updated = trackService.updateTrack(id, title, artist, category, description);
+        return ResponseEntity.ok(updated);
+    }*/
 }
