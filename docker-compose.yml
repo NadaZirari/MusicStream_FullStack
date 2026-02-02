@@ -1,0 +1,36 @@
+services:
+  database:
+    image: postgres:15
+    container_name: musicstream_db
+    environment:
+      POSTGRES_DB: musicstream
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: nada123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: musicstream_backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/musicstream
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: nada123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - database
+
+  frontend:
+    build: ./frontend
+    container_name: musicstream_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
