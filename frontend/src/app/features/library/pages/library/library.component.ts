@@ -32,14 +32,17 @@ export class LibraryComponent implements OnInit {
   fileError: string | null = null;
 
   // Observables pour la vue
-  tracks$ = this.store.select(state => state.track.tracks);
-  error$ = this.store.select(state => state.track.error);
+  tracks$;
+  error$;
 
   constructor(
     private trackService: TrackService, // Keep public if used in template for other things? No, trying to hide it.
     private fb: FormBuilder,
     private store: Store<{ track: TrackState }>
   ) {
+    this.tracks$ = this.store.select(state => state.track.tracks);
+    this.error$ = this.store.select(state => state.track.error);
+
     this.trackForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(50)]],
       artist: ['', Validators.required],
@@ -58,9 +61,9 @@ export class LibraryComponent implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
 
-    // 🔒 Taille max 10MB
-    if (file.size > 10 * 1024 * 1024) {
-      this.fileError = 'Le fichier dépasse 10MB';
+    // 🔒 Taille max 50MB
+    if (file.size > 50 * 1024 * 1024) {
+      this.fileError = 'Le fichier dépasse 50MB';
       return;
     }
 
@@ -95,7 +98,7 @@ export class LibraryComponent implements OnInit {
         audioUrl: '' // handled by backend
       };
 
-      this.trackService.add(trackData).subscribe({
+      this.trackService.add(trackData, file).subscribe({
         next: () => {
            this.store.dispatch(loadTracks());
            this.trackForm.reset({ category: 'pop' });

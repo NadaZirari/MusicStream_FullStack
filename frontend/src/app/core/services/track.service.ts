@@ -16,8 +16,16 @@ export class TrackService {
     return this.http.get<Track[]>(this.api);
   }
 
-  add(track: Track): Observable<Track> {
-    return this.http.post<Track>(this.api, track);
+  add(track: Track, file: File): Observable<Track> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', track.title);
+    formData.append('artist', track.artist);
+    formData.append('category', track.category);
+    formData.append('description', track.description || '');
+    formData.append('duration', track.duration.toString());
+
+    return this.http.post<Track>(this.api, formData);
   }
 
   delete(id: string): Observable<void> {
