@@ -4,6 +4,7 @@ package musicstream.backend.controller;
 import musicstream.backend.model.Track;
 import musicstream.backend.service.TrackService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +26,7 @@ public class TrackController {
     }
 
 
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Track> uploadTrack(
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
