@@ -61,4 +61,11 @@ The project follows a clean, layered architecture:
 
 
 ---
+## 📐 diagramme de classe
+
+<img width="323" height="194" alt="diag class de musicstream" src="https://github.com/user-attachments/assets/bbd76fd7-cc6f-4d98-bce0-477f4d7474f0" />
+
+
+
+
 *Projet individuel - Nada Zirari - 2026*
